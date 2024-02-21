@@ -606,7 +606,7 @@ static const struct InstructionMap I_inst_map[] = {
     {"fmadd.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x43, 0x7f, {}, nullptr}, // FMADD.S
     {"fmsub.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x47, 0x7f, {}, nullptr}, // FMSUB.S
     {"fnmsub.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4b, 0x7f, {}, nullptr}, // FNMSUB.S
-    {"fnmadd.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4b, 0x7f, {}, nullptr}, // FNMADD.S
+    {"fnmadd.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4f, 0x7f, {}, nullptr}, // FNMADD.S
     IM_UNKNOWN, // OP-FP
     IM_UNKNOWN, // reserved
     IM_UNKNOWN, // custom-2/rv128
