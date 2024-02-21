@@ -1,0 +1,24 @@
+{
+	"BUILD_DIR" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/gui_autogen",
+	"CMAKE_BINARY_DIR" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim",
+	"CMAKE_CURRENT_BINARY_DIR" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui",
+	"CMAKE_SOURCE_DIR" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim",
+	"INCLUDE_DIR" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/gui_autogen/include",
+	"INPUTS" : 
+	[
+		"/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/resources/samples/simple-lw-sw-ia.S",
+		"/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/resources/samples/template.S",
+		"/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/resources/samples/template-os.S"
+	],
+	"LOCK_FILE" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/CMakeFiles/gui_autogen.dir/AutoRcc_samples_TVQCPI4GEE_Lock.lock",
+	"MULTI_CONFIG" : false,
+	"OPTIONS" : [ "-name", "samples" ],
+	"OUTPUT_CHECKSUM" : "TVQCPI4GEE",
+	"OUTPUT_NAME" : "qrc_samples.cpp",
+	"RCC_EXECUTABLE" : "/opt/Qt5.14.2/5.14.2/gcc_64/bin/rcc",
+	"RCC_LIST_OPTIONS" : [ "--list" ],
+	"SETTINGS_FILE" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/CMakeFiles/gui_autogen.dir/AutoRcc_samples_TVQCPI4GEE_Used.txt",
+	"SOURCE" : "/home/jingqing3948/Develop/github-qtrvsim/qtrvsim/src/gui/resources/samples/samples.qrc",
+	"VERBOSITY" : 0
+}

@@ -588,7 +588,7 @@ static const struct InstructionMap OP_32_map[] = {
 
 static const struct InstructionMap I_inst_map[] = {
     {"load", IT_I, NOALU, NOMEM, LOAD_map, {}, 0x03, 0x7f, { .subfield = {3, 12} }, nullptr}, // LOAD
-    IM_UNKNOWN, // LOAD-FP
+    {"load-fp", IT_I, NOALU, NOMEM, nullptr, {}, 0x03, 0x7f, {}, nullptr}, // LOAD-FP
     IM_UNKNOWN, // custom-0
     {"misc-mem", IT_I, NOALU, NOMEM, MISC_MEM_map, {}, 0x0f, 0x7f, { .subfield = {3, 12} }, nullptr}, // MISC-MEM
     {"op-imm", IT_I, NOALU, NOMEM, OP_IMM_map, {}, 0x13, 0x7f, { .subfield = {3, 12} }, nullptr}, // OP-IMM
@@ -596,17 +596,17 @@ static const struct InstructionMap I_inst_map[] = {
     {"op-imm-32", IT_I, NOALU, NOMEM, OP_IMM_32_map, {}, 0x1b, 0x7f, { .subfield = {3, 12} }, nullptr}, // OP-IMM-32    IM_UNKNOWN, // OP-IMM-32
     IM_UNKNOWN, // 48b
     {"store", IT_I, NOALU, NOMEM, STORE_map, {}, 0x23, 0x7f, { .subfield = {3, 12} }, nullptr}, // STORE
-    IM_UNKNOWN, // STORE-FP
+    {"store-fp", IT_I, NOALU, NOMEM, nullptr, {}, 0x03, 0x7f, {}, nullptr}, // STORE-FP
     IM_UNKNOWN, // custom-1
     {"amo", IT_R, NOALU, NOMEM, AMO_map, {}, 0x2f, 0x7f, { .subfield = {3, 12} }, nullptr}, // OP-32
     {"op", IT_R, NOALU, NOMEM, OP_map, {}, 0x33, 0x7f, { .subfield = {1, 25} }, nullptr}, // OP
     {"lui", IT_U, { .alu_op=AluOp::ADD }, NOMEM, nullptr, {"d", "u"}, 0x37, 0x7f, { .flags = IMF_SUPPORTED | IMF_ALUSRC | IMF_REGWRITE }, nullptr}, // LUI
     {"op-32", IT_R, NOALU, NOMEM, OP_32_map, {}, 0x3b, 0x7f, { .subfield = {1, 25} }, nullptr}, // OP-32
     IM_UNKNOWN, // 64b
-    IM_UNKNOWN, // MADD
-    IM_UNKNOWN, // MSUB
-    IM_UNKNOWN, // NMSUB
-    IM_UNKNOWN, // NMADD
+    {"fmadd.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x43, 0x7f, {}, nullptr}, // FMADD.S
+    {"fmsub.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x47, 0x7f, {}, nullptr}, // FMSUB.S
+    {"fnmsub.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4b, 0x7f, {}, nullptr}, // FNMSUB.S
+    {"fnmadd.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4b, 0x7f, {}, nullptr}, // FNMADD.S
     IM_UNKNOWN, // OP-FP
     IM_UNKNOWN, // reserved
     IM_UNKNOWN, // custom-2/rv128
