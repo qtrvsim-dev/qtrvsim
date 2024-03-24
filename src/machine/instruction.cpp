@@ -10,8 +10,8 @@
 #include <QChar>
 #include <QMultiMap>
 #include <cctype>
-#include <cstring>
 #include <cinttypes>
+#include <cstring>
 #include <set>
 #include <type_traits>
 #include <utility>
@@ -106,14 +106,11 @@ bool argdesbycode_filled = fill_argdesbycode();
 #define FLAGS_ALU_T_R_D (IMF_SUPPORTED | IMF_REGWRITE)
 #define FLAGS_ALU_T_R_STD (FLAGS_ALU_T_R_D | IMF_ALU_REQ_RS | IMF_ALU_REQ_RT)
 
-#define FLAGS_AMO_LOAD                                                                             \
-    (FLAGS_ALU_I_LOAD | IMF_AMO)
+#define FLAGS_AMO_LOAD (FLAGS_ALU_I_LOAD | IMF_AMO)
 // FLAGS_AMO_STORE for store conditional requires IMF_MEMREAD to ensure stalling because
 // forwarding is not possible from memory stage after memory read, TODO to solve better way
-#define FLAGS_AMO_STORE                                                                            \
-    (FLAGS_ALU_I_STORE | FLAGS_ALU_T_R_D | IMF_AMO | IMF_MEMREAD)
-#define FLAGS_AMO_MODIFY                                                                           \
-    (FLAGS_ALU_I_LOAD | FLAGS_AMO_STORE | IMF_AMO)
+#define FLAGS_AMO_STORE (FLAGS_ALU_I_STORE | FLAGS_ALU_T_R_D | IMF_AMO | IMF_MEMREAD)
+#define FLAGS_AMO_MODIFY (FLAGS_ALU_I_LOAD | FLAGS_AMO_STORE | IMF_AMO)
 
 #define NOALU                                                                                      \
     { .alu_op = AluOp::ADD }
@@ -122,20 +119,15 @@ bool argdesbycode_filled = fill_argdesbycode();
 // TODO NOTE: if unknown is defined as all 0, instruction map can be significantly simplified
 //  using zero initialization.
 #define IM_UNKNOWN                                                                                 \
-    {                                                                                              \
-        "unknown", Instruction::UNKNOWN, NOALU, NOMEM, nullptr, {}, 0, 0, {                        \
-            0                                                                                      \
-        },                                                                                         \
-        nullptr                                                                                    \
-    }
+    { "unknown", Instruction::UNKNOWN, NOALU, NOMEM, nullptr, {}, 0, 0, { 0 }, nullptr }
 
 struct InstructionMap {
     const char *name;
     Instruction::Type type = Instruction::UNKNOWN;
-    AluCombinedOp alu = { .alu_op = AluOp::ADD } ;
+    AluCombinedOp alu = { .alu_op = AluOp::ADD };
     AccessControl mem_ctl = AC_NONE;
     const struct InstructionMap *subclass = nullptr; // when subclass is used then flags
-                                           // has special meaning
+                                                     // has special meaning
     const cvector<QString, 3> args;
     uint32_t code;
     uint32_t mask;
@@ -586,9 +578,77 @@ static const struct InstructionMap OP_32_map[] = {
 
 // Full, uncomprese, instructions top level map
 
+static const struct InstructionMap F_sgnj_map[] = {
+    {"fsgnj.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x20000053, 0xfe00707f, {}, nullptr},
+    {"fsgnjn.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x20001053, 0xfe00707f, {}, nullptr},
+    {"fsgnjx.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x20002053, 0xfe00707f, {}, nullptr},
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+};
+
+static const struct InstructionMap F_ex_map[] = {
+    {"fmin.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x28000053, 0xfe00707f, {}, nullptr},
+    {"fmax.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x28001053, 0xfe00707f, {}, nullptr},
+};
+
+static const struct InstructionMap F_cvt_w_s_map[] = {
+    {"fcvt.w.s",IT_I, NOALU, NOMEM, nullptr, {}, 0xc0000053, 0xfff0007f, {}, nullptr},
+    {"fcvt.wu.s",IT_I, NOALU, NOMEM, nullptr, {}, 0xc0100053, 0xfff0007f, {}, nullptr},
+};
+
+static const struct InstructionMap F_cp_map[] = {
+    {"fle.s",IT_I, NOALU, NOMEM, nullptr, {}, 0xa0002053, 0xfe00707f, {}, nullptr},
+    {"flt.s",IT_I, NOALU, NOMEM, nullptr, {}, 0xa0001053, 0xfe00707f, {}, nullptr},
+    {"feq.s",IT_I, NOALU, NOMEM, nullptr, {}, 0xa0000053, 0xfe00707f, {}, nullptr},
+    IM_UNKNOWN,
+};
+
+static const struct InstructionMap F_cvt_s_w_map[] = {
+    {"fcvt.s.w",IT_I, NOALU, NOMEM, nullptr, {}, 0xd0000053, 0xfff0007f, {}, nullptr},
+    {"fcvt.s.wu",IT_I, NOALU, NOMEM, nullptr, {}, 0xd0100053, 0xfff0007f, {}, nullptr},
+};
+
+static const struct InstructionMap F_inst_map[] = {
+    {"fadd.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x53, 0xfe00007f, {}, nullptr},
+    {"fsub.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x8000053, 0xfe00007f, {}, nullptr},
+    {"fmul.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x10000053, 0xfe00007f, {}, nullptr},
+    {"fdiv.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x18000053, 0xfe00007f, {}, nullptr},
+    {"fsgnj",IT_I, NOALU, NOMEM, F_sgnj_map, {}, 0x20000053, 0xfe00007f, { .subfield = {3, 12} }, nullptr},
+    {"f-ex.s",IT_I, NOALU, NOMEM, F_ex_map, {}, 0x28000053, 0xfe00007f, { .subfield = {1, 12} }, nullptr},
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    {"fsqrt.s",IT_I, NOALU, NOMEM, nullptr, {}, 0x58000053, 0xfe00007f, {}, nullptr},
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    {"f-cp",IT_I, NOALU, NOMEM, F_cp_map, {}, 0xa0000053, 0xfe00007f, { .subfield = {2, 12} }, nullptr},
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    IM_UNKNOWN,
+    {"fcvt-w-s",IT_I, NOALU, NOMEM, F_cvt_w_s_map, {}, 0xc0000053, 0xfe00007f, { .subfield = {1, 20} }, nullptr},
+    IM_UNKNOWN,
+    {"fcvt-s-w",IT_I, NOALU, NOMEM, F_cvt_s_w_map, {}, 0xd0000053, 0xfe00007f, { .subfield = {1, 20} }, nullptr},
+    IM_UNKNOWN,
+    {"fmv.x.w",IT_I, NOALU, NOMEM, nullptr, {}, 0xe0000053, 0xfe00007f, {}, nullptr},
+    IM_UNKNOWN,
+    {"fmv.w.x",IT_I, NOALU, NOMEM, nullptr, {}, 0xf0000053, 0xfe00007f, {}, nullptr},
+    IM_UNKNOWN,
+};
+
 static const struct InstructionMap I_inst_map[] = {
     {"load", IT_I, NOALU, NOMEM, LOAD_map, {}, 0x03, 0x7f, { .subfield = {3, 12} }, nullptr}, // LOAD
-    {"load-fp", IT_I, NOALU, NOMEM, nullptr, {}, 0x03, 0x7f, {}, nullptr}, // LOAD-FP
+    {"load-fp", IT_I, NOALU, NOMEM, nullptr, {}, 0x07, 0x7f, {}, nullptr}, // LOAD-FP
     IM_UNKNOWN, // custom-0
     {"misc-mem", IT_I, NOALU, NOMEM, MISC_MEM_map, {}, 0x0f, 0x7f, { .subfield = {3, 12} }, nullptr}, // MISC-MEM
     {"op-imm", IT_I, NOALU, NOMEM, OP_IMM_map, {}, 0x13, 0x7f, { .subfield = {3, 12} }, nullptr}, // OP-IMM
@@ -596,7 +656,7 @@ static const struct InstructionMap I_inst_map[] = {
     {"op-imm-32", IT_I, NOALU, NOMEM, OP_IMM_32_map, {}, 0x1b, 0x7f, { .subfield = {3, 12} }, nullptr}, // OP-IMM-32    IM_UNKNOWN, // OP-IMM-32
     IM_UNKNOWN, // 48b
     {"store", IT_I, NOALU, NOMEM, STORE_map, {}, 0x23, 0x7f, { .subfield = {3, 12} }, nullptr}, // STORE
-    {"store-fp", IT_I, NOALU, NOMEM, nullptr, {}, 0x03, 0x7f, {}, nullptr}, // STORE-FP
+    {"store-fp", IT_I, NOALU, NOMEM, nullptr, {}, 0x27, 0x7f, {}, nullptr}, // STORE-FP
     IM_UNKNOWN, // custom-1
     {"amo", IT_R, NOALU, NOMEM, AMO_map, {}, 0x2f, 0x7f, { .subfield = {3, 12} }, nullptr}, // OP-32
     {"op", IT_R, NOALU, NOMEM, OP_map, {}, 0x33, 0x7f, { .subfield = {1, 25} }, nullptr}, // OP
@@ -607,7 +667,7 @@ static const struct InstructionMap I_inst_map[] = {
     {"fmsub.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x47, 0x7f, {}, nullptr}, // FMSUB.S
     {"fnmsub.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4b, 0x7f, {}, nullptr}, // FNMSUB.S
     {"fnmadd.s", IT_I, NOALU, NOMEM, nullptr, {}, 0x4f, 0x7f, {}, nullptr}, // FNMADD.S
-    IM_UNKNOWN, // OP-FP
+    {"op-fp",IT_I, NOALU, NOMEM, F_inst_map, {}, 0x600007f, 0x7f, { .subfield={5,27} }, nullptr}, // OP-FP
     IM_UNKNOWN, // reserved
     IM_UNKNOWN, // custom-2/rv128
     IM_UNKNOWN, // 48b
@@ -642,16 +702,13 @@ static inline const struct InstructionMap &InstructionMapFind(uint32_t code) {
     while (im->subclass != nullptr) {
         im = &im->subclass[im->subfield.decode(code)];
     }
-    if ((code ^ im->code) & im->mask) {
-        return C_inst_unknown;
-    }
+    if ((code ^ im->code) & im->mask) { return C_inst_unknown; }
     return *im;
 }
 
-const std::array<const QString, 36> RECOGNIZED_PSEUDOINSTRUCTIONS {
-    "nop",    "la",     "li",     "sext.b", "sext.h",
-    "zext.h", "zext.w", "call", "tail"
-};
+const std::array<const QString, 36> RECOGNIZED_PSEUDOINSTRUCTIONS { "nop",    "la",     "li",
+                                                                    "sext.b", "sext.h", "zext.h",
+                                                                    "zext.w", "call",   "tail" };
 
 bool Instruction::symbolic_registers_enabled = false;
 const Instruction Instruction::NOP = Instruction(0x00000013);
@@ -834,9 +891,7 @@ QString Instruction::to_str(Address inst_addr) const {
                 if (symbolic_registers_enabled) {
                     try {
                         res += CSR::REGISTERS[CSR::REGISTER_MAP.at(CSR::Address(field))].name;
-                    } catch (std::out_of_range &e) {
-                        res.append(str::asHex(field));
-                    }
+                    } catch (std::out_of_range &e) { res.append(str::asHex(field)); }
                 } else {
                     res.append(str::asHex(field));
                 }
@@ -850,17 +905,23 @@ QString Instruction::to_str(Address inst_addr) const {
 
 QMultiMap<QString, uint32_t> str_to_instruction_code_map;
 
-static void instruction_from_string_build_base_aliases(uint32_t base_code,
-                uint32_t base_mask, const InstructionMap *ia) {
+static void instruction_from_string_build_base_aliases(
+    uint32_t base_code,
+    uint32_t base_mask,
+    const InstructionMap *ia) {
     for (; ia->name != nullptr; ia++) {
         if ((ia->code ^ base_code) & base_mask) {
-            ERROR("alias code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32 ") found 0x%08" PRIx32,
-                  ia->name, base_code, base_mask, ia->code);
+            ERROR(
+                "alias code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32
+                ") found 0x%08" PRIx32,
+                ia->name, base_code, base_mask, ia->code);
             continue;
         }
         if (~ia->mask & base_mask) {
-            ERROR("aliase code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32 ") found 0x%08" PRIx32 " with too wide mask 0x%08" PRIx32,
-                  ia->name, base_code, base_mask, ia->code, ia->mask);
+            ERROR(
+                "aliase code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32
+                ") found 0x%08" PRIx32 " with too wide mask 0x%08" PRIx32,
+                ia->name, base_code, base_mask, ia->code, ia->mask);
             continue;
         }
         bool found = false;
@@ -871,8 +932,7 @@ static void instruction_from_string_build_base_aliases(uint32_t base_code,
                 break;
             }
         }
-        if (found)
-            continue;
+        if (found) continue;
 
         // store base code, the iteration over alliases is required anyway
         str_to_instruction_code_map.insert(ia->name, base_code);
@@ -882,7 +942,8 @@ static void instruction_from_string_build_base_aliases(uint32_t base_code,
 void instruction_from_string_build_base(
     const InstructionMap *im,
     BitField field,
-    uint32_t base_code, uint32_t base_mask) {
+    uint32_t base_code,
+    uint32_t base_mask) {
     uint32_t code;
     uint8_t bits = field.count;
     uint8_t shift = field.offset;
@@ -897,13 +958,17 @@ void instruction_from_string_build_base(
         }
         if (!(im->flags & IMF_SUPPORTED)) { continue; }
         if ((im->code ^ code) & base_mask) {
-            ERROR("code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32 ") found 0x%08" PRIx32,
-                  im->name, code, base_mask, im->code);
+            ERROR(
+                "code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32
+                ") found 0x%08" PRIx32,
+                im->name, code, base_mask, im->code);
             continue;
         }
         if (~im->mask & base_mask) {
-            ERROR("code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32 ") found 0x%08" PRIx32 " with too wide mask 0x%08" PRIx32,
-                  im->name, code, base_mask, im->code, im->mask);
+            ERROR(
+                "code mismatch %s computed 0x%08" PRIx32 " (mask 0x%08" PRIx32
+                ") found 0x%08" PRIx32 " with too wide mask 0x%08" PRIx32,
+                im->name, code, base_mask, im->code, im->mask);
             continue;
         }
         str_to_instruction_code_map.insert(im->name, im->code);
@@ -1165,8 +1230,7 @@ static void instruction_code_map_next_im(const InstructionMap *&im, bool &proces
         im = im->aliases;
     } else {
         im++;
-        if (im->name == nullptr)
-            im = nullptr;
+        if (im->name == nullptr) im = nullptr;
     }
 }
 
@@ -1189,20 +1253,19 @@ Instruction Instruction::base_from_tokens(
         bool processing_aliases = false;
 
         const InstructionMap *im = &InstructionMapFind(inst_code);
-        for ( ; im != nullptr; instruction_code_map_next_im(im, processing_aliases) ) {
-            if (inst.base != im->name)
-                continue;
+        for (; im != nullptr; instruction_code_map_next_im(im, processing_aliases)) {
+            if (inst.base != im->name) continue;
 
             try {
-                 inst_code = im->code;
+                inst_code = im->code;
 
-                 if (inst.fields.count() != (int)im->args.size()) {
-                     if (!rethrow) {
-                         parse_error = ParseError("number of arguments does not match");
-                         rethrow = true;
-                     }
-                     continue;
-                 }
+                if (inst.fields.count() != (int)im->args.size()) {
+                    if (!rethrow) {
+                        parse_error = ParseError("number of arguments does not match");
+                        rethrow = true;
+                    }
+                    continue;
+                }
 
                 for (int field_index = 0; field_index < (int)im->args.size(); field_index++) {
                     const QString &arg = im->args[field_index];
@@ -1212,16 +1275,14 @@ Instruction Instruction::base_from_tokens(
                         initial_immediate_value);
                 }
                 return Instruction(inst_code);
-            } catch(ParseError &pe) {
+            } catch (ParseError &pe) {
                 rethrow = true;
                 parse_error = pe;
             }
         }
     }
 
-    if (rethrow) {
-        throw parse_error;
-    }
+    if (rethrow) { throw parse_error; }
 
     DEBUG(
         "Base instruction of the name %s not matched to any known base format.",
